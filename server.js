@@ -4,8 +4,17 @@ const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const sql = require('./db');
 const crypto = require('crypto');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "POST"]
+    }
+});
 const port = process.env.PORT || 3002;
 
 // Middleware
@@ -91,8 +100,14 @@ app.get('/api/future-matchups', async (req, res) => {
                 GREATEST(elb1.last_battle_id, elb2.last_battle_id) ASC NULLS FIRST;
         `;
 
-        console.log(`Found ${futureMatchups.length} potential future matchups.`);
-        res.json(futureMatchups);
+        // Convert vote_count to integers to fix "01" display issue
+        const processedMatchups = futureMatchups.map(matchup => ({
+            ...matchup,
+            vote_count: parseInt(matchup.vote_count, 10) || 0
+        }));
+
+        console.log(`Found ${processedMatchups.length} potential future matchups.`);
+        res.json(processedMatchups);
 
     } catch (error) {
         console.error('Error fetching future matchups:', error);
@@ -197,6 +212,19 @@ app.post('/api/vote-future', async (req, res) => {
             VALUES (${emcee1_id}, ${emcee2_id}, ${voterCookie})
         `;
 
+        // Get updated vote count for this matchup
+        const voteCount = await sql`
+            SELECT COUNT(*) as count 
+            FROM future_battle_votes 
+            WHERE emcee1_id = ${emcee1_id} AND emcee2_id = ${emcee2_id}
+        `;
+
+        // Broadcast real-time update to all connected clients
+        io.emit('voteUpdate', {
+            matchupId: matchupId,
+            newVoteCount: parseInt(voteCount[0].count, 10)
+        });
+
         // Return a success message without recalculating all matchups
         res.json({ success: true });
     } catch (error) {
@@ -210,7 +238,16 @@ app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(port, async () => {
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+    console.log('User connected:', socket.id);
+    
+    socket.on('disconnect', () => {
+        console.log('User disconnected:', socket.id);
+    });
+});
+
+server.listen(port, async () => {
     console.log(`Future Battles server running on port ${port}`);
     try {
         // Test the database connection
