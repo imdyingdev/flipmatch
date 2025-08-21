@@ -6,7 +6,7 @@ const sql = require('./db');
 const crypto = require('crypto');
 
 const app = express();
-const port = 3002; // Different port from main voting app
+const port = process.env.PORT || 3002;
 
 // Middleware
 app.use(cookieParser());
