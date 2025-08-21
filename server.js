@@ -103,7 +103,7 @@ app.get('/api/stats', async (req, res) => {
             SELECT
                 (SELECT COUNT(*) FROM future_battle_votes) AS total_votes,
                 (SELECT COUNT(DISTINCT voter_cookie) FROM future_battle_votes) AS unique_voters,
-                (SELECT COUNT(*) FROM (SELECT 1 FROM future_battle_votes GROUP BY emcee1_id, emcee2_id) AS distinct_matchups) AS total_matchups;
+                (SELECT COUNT(DISTINCT (emcee1_id, emcee2_id)) FROM future_battle_votes) AS total_matchups;
         `;
 
         const result = {
