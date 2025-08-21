@@ -6,6 +6,7 @@ const sql = postgres({
     database: 'postgres', // Or your specific database name
     username: 'postgres', // Default GCP Cloud SQL user
     password: 'JeaGrafe2004*', // Replace with the password you set in GCP
+    ssl: false // Explicitly disable SSL for Cloud Run
 });
 
 module.exports = sql;
