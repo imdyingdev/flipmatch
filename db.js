@@ -1,11 +1,11 @@
 const postgres = require('postgres');
 
 const sql = postgres({
-    host: '34.9.200.153',
-    port: 5432,
-    database: 'postgres', // Or your specific database name
-    username: 'postgres', // Default GCP Cloud SQL user
-    password: 'JeaGrafe2004*', // Replace with the password you set in GCP
+    host: process.env.PGHOST || '34.9.200.153',
+    port: process.env.PGPORT || 5432,
+    database: process.env.PGDATABASE || 'postgres',
+    username: process.env.PGUSER || 'postgres',
+    password: process.env.PGPASSWORD || 'JeaGrafe2004*',
     ssl: false // Explicitly disable SSL for Cloud Run
 });
 
