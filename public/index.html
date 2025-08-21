@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlipMatch</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .chart-container {
+            /* Removed shadow and container styles for a flatter look */
+            margin-bottom: 20px;
+        }
+
+        .chart-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .chart-title {
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .chart-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: bold;
+            display: block;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .chart-bars {
+            margin: 20px 0;
+        }
+
+        .bar-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            height: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .bar-row:hover {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 0 5px;
+        }
+
+        .matchup-name {
+            width: 200px;
+            font-size: 14px;
+            font-weight: 500;
+            text-align: right;
+            padding-right: 15px;
+            color: #333;
+        }
+
+        .bar-container {
+            flex: 1;
+            height: 32px;
+            position: relative;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 15px;
+        }
+
+        .vote-bar {
+            height: 100%;
+            border-radius: 4px;
+            position: relative;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .vote-count {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .vote-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            min-width: 70px;
+        }
+
+        .vote-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .vote-btn:disabled {
+            background: #27ae60;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
+        .loading {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin: 50px 0;
+        }
+
+        .error {
+            background: #e74c3c;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .success {
+            background: #27ae60;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .pagination-btn {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 0 5px;
+            transition: all 0.2s ease;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        .pagination-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .pagination-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .search-container {
+            margin-bottom: 20px;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .chart-title {
+                font-size: 24px;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .matchup-name {
+                width: 150px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chart-container">
+            <div class="chart-header">
+                <div class="chart-title">What if Battles!</div>
+                <div class="chart-subtitle">Tell us which battles you think are straight fire… and which ones are just wild ideas.</div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for a specific battle (e.g., Emcee A vs Emcee B)">
+            </div>
+
+            <div class="stats-bar" id="statsBar">
+                <div class="stat-item">
+                    <span class="stat-number" id="totalVotes">0</span>
+                    <span class="stat-label">Total Votes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="uniqueVoters">0</span>
+                    <span class="stat-label">Unique Voters</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number" id="totalMatchups">0</span>
+                    <span class="stat-label">Future Matchups</span>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="loading" class="loading">Loading future battles...</div>
+            
+            <div class="chart-bars" id="matchupsList"></div>
+            <div class="pagination-container" id="pagination"></div>
+        </div>
+    </div>
+
+    <script>
+        let votedMatchups = [];
+        let matchupsData = [];
+        let currentPage = 1;
+        const itemsPerPage = 50;
+
+        // Load data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadVotedMatchups();
+            loadMatchups();
+
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', () => {
+                currentPage = 1; // Reset to first page on new search
+                renderMatchups();
+            });
+        });
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/stats');
+                const stats = await response.json();
+
+                document.getElementById('totalVotes').textContent = stats.totalVotes || 0;
+                document.getElementById('uniqueVoters').textContent = stats.uniqueVoters || 0;
+                document.getElementById('totalMatchups').textContent = stats.totalMatchups || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadVotedMatchups() {
+            try {
+                const response = await fetch('/api/check-votes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const data = await response.json();
+                votedMatchups = data.votedMatchups || [];
+            } catch (error) {
+                console.error('Error loading voted matchups:', error);
+            }
+        }
+
+        async function loadMatchups() {
+            try {
+                const matchupsResponse = await fetch('/api/future-matchups');
+                matchupsData = await matchupsResponse.json();
+
+                document.getElementById('loading').style.display = 'none';
+                renderMatchups();
+            } catch (error) {
+                console.error('Error loading matchups:', error);
+                showError('Failed to load matchups. Please refresh the page.');
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function renderMatchups() {
+            const list = document.getElementById('matchupsList');
+            list.innerHTML = '';
+
+            let displayData = [...matchupsData].sort((a, b) => b.vote_count - a.vote_count);
+
+            const searchQuery = document.getElementById('searchInput').value.trim().toLowerCase();
+            if (searchQuery) {
+                const searchParts = searchQuery.split(' vs ');
+                if (searchParts.length === 2) {
+                    const name1 = searchParts[0].trim();
+                    const name2 = searchParts[1].trim();
+                    const searchedIndex = displayData.findIndex(m => {
+                        const c1 = m.candidate1.toLowerCase();
+                        const c2 = m.candidate2.toLowerCase();
+                        return (c1 === name1 && c2 === name2) || (c1 === name2 && c2 === name1);
+                    });
+
+                    if (searchedIndex > -1) {
+                        const [searchedItem] = displayData.splice(searchedIndex, 1);
+                        displayData.unshift(searchedItem);
+                    }
+                }
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const paginatedItems = displayData.slice(startIndex, endIndex);
+
+            const maxVotes = Math.max(...displayData.map(m => m.vote_count), 1);
+
+            paginatedItems.forEach((matchup, index) => {
+                const hasVoted = votedMatchups.includes(matchup.matchup_id);
+                const votePercentage = (matchup.vote_count / maxVotes) * 100;
+                
+                // Random color generation for a full RGB spectrum
+                const randomColor = () => `rgb(${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)}, ${Math.floor(Math.random() * 256)})`;
+                const color = randomColor();
+
+                const item = document.createElement('div');
+                item.className = 'bar-row';
+                item.innerHTML = `
+                    <div class="matchup-name">${matchup.candidate1} vs ${matchup.candidate2}</div>
+                    <div class="bar-container">
+                        <div class="vote-bar" style="width: ${votePercentage}%; background: ${color};">
+                            <div class="vote-count">${matchup.vote_count} votes</div>
+                        </div>
+                    </div>
+                    <button class="vote-btn" 
+                            onclick="voteForMatchup('${matchup.matchup_id}')"
+                            ${hasVoted ? 'disabled' : ''}>
+                        ${hasVoted ? 'Voted!' : 'Vote'}
+                    </button>
+                `;
+                
+                list.appendChild(item);
+            });
+
+            renderPagination();
+        }
+
+        async function voteForMatchup(matchupId) {
+            try {
+                const response = await fetch('/api/vote-future', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matchupId })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    votedMatchups.push(matchupId);
+                    
+                    // Find the matchup in the local data and increment its vote count
+                    const votedMatchup = matchupsData.find(m => m.matchup_id === matchupId);
+                    if (votedMatchup) {
+                        votedMatchup.vote_count = (votedMatchup.vote_count || 0) + 1;
+                    }
+
+                    // Re-render with sorting
+                    renderMatchups();
+                    loadStats(); // Refresh stats
+                    showSuccess('Vote recorded! Thank you for your input.');
+                } else {
+                    showError(data.error || 'Failed to record vote');
+                }
+            } catch (error) {
+                console.error('Error voting:', error);
+                showError('Failed to record vote. Please try again.');
+            }
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.className = 'error';
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showSuccess(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.className = 'success';
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function renderPagination() {
+            const paginationContainer = document.getElementById('pagination');
+            paginationContainer.innerHTML = '';
+            const pageCount = Math.ceil(matchupsData.length / itemsPerPage);
+
+            if (pageCount <= 1) return;
+
+            const createButton = (text, page) => {
+                const button = document.createElement('button');
+                button.textContent = text;
+                button.className = 'pagination-btn';
+                if (page === currentPage) button.classList.add('active');
+                button.disabled = page === null || page < 1 || page > pageCount;
+                button.onclick = () => {
+                    if (page !== null && page >= 1 && page <= pageCount) {
+                        currentPage = page;
+                        renderMatchups();
+                    }
+                };
+                return button;
+            };
+
+            const createEllipsis = () => {
+                const span = document.createElement('span');
+                span.textContent = '...';
+                span.style.margin = '0 10px';
+                span.style.alignSelf = 'center';
+                return span;
+            };
+
+            paginationContainer.appendChild(createButton('Previous', currentPage - 1));
+
+            const pages = new Set();
+            pages.add(1);
+            pages.add(pageCount);
+            pages.add(currentPage);
+            if (currentPage > 1) pages.add(currentPage - 1);
+            if (currentPage < pageCount) pages.add(currentPage + 1);
+
+            const sortedPages = Array.from(pages).sort((a, b) => a - b);
+            let lastPage = 0;
+
+            sortedPages.forEach(page => {
+                if (page > lastPage + 1) {
+                    paginationContainer.appendChild(createEllipsis());
+                }
+                paginationContainer.appendChild(createButton(page, page));
+                lastPage = page;
+            });
+
+            paginationContainer.appendChild(createButton('Next', currentPage + 1));
+        }
+    </script>
+</body>
+</html>
