@@ -21,7 +21,7 @@ steps:
     - '--platform'
     - 'managed'
     - '--allow-unauthenticated'
-    - '--set-env-vars=PGHOST=34.9.200.153,PGDATABASE=postgres,PGUSER=postgres,PGPASSWORD=JeaGrafe2004*'
+    - '--set-env-vars=INSTANCE_CONNECTION_NAME=imdyingdevbots:us-central1:fliptop-matches-app,PGDATABASE=postgres,PGUSER=postgres,PGPASSWORD=JeaGrafe2004*'
 
 images:
 - 'gcr.io/imdyingdevbots/flipmatch'
