@@ -25,3 +25,6 @@ steps:
 
 images:
 - 'gcr.io/imdyingdevbots/flipmatch'
+
+options:
+  logging: CLOUD_LOGGING_ONLY
