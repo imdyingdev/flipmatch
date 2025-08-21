@@ -46,7 +46,11 @@ app.get('/api/emcees', async (req, res) => {
 // API endpoint to get all potential future matchups
 app.get('/api/future-matchups', async (req, res) => {
     try {
-        console.log('Fetching future matchups...');
+        console.log('Future matchups endpoint called');
+        
+        // Test basic connection first
+        await sql`SELECT 1`;
+        console.log('Database connection test passed for future matchups');
 
         const futureMatchups = await sql`
             WITH EmceeLastBattle AS (
@@ -92,13 +96,20 @@ app.get('/api/future-matchups', async (req, res) => {
 
     } catch (error) {
         console.error('Error fetching future matchups:', error);
-        res.status(500).json({ error: 'Failed to fetch future matchups' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ error: 'Failed to fetch future matchups', details: error.message });
     }
 });
 
 // API endpoint to get voting statistics
 app.get('/api/stats', async (req, res) => {
     try {
+        console.log('Stats endpoint called');
+        
+        // Test basic connection first
+        await sql`SELECT 1`;
+        console.log('Database connection test passed');
+        
         const stats = await sql`
             SELECT
                 (SELECT COUNT(*) FROM future_battle_votes) AS total_votes,
@@ -106,16 +117,20 @@ app.get('/api/stats', async (req, res) => {
                 (SELECT COUNT(DISTINCT (emcee1_id, emcee2_id)) FROM future_battle_votes) AS total_matchups;
         `;
 
+        console.log('Stats query result:', stats[0]);
+
         const result = {
             totalVotes: parseInt(stats[0].total_votes, 10) || 0,
             uniqueVoters: parseInt(stats[0].unique_voters, 10) || 0,
             totalMatchups: parseInt(stats[0].total_matchups, 10) || 0
         };
 
+        console.log('Sending stats result:', result);
         res.json(result);
     } catch (error) {
         console.error('Error fetching stats:', error);
-        res.status(500).json({ error: 'Failed to fetch stats' });
+        console.error('Error stack:', error.stack);
+        res.status(500).json({ error: 'Failed to fetch stats', details: error.message });
     }
 });
 
