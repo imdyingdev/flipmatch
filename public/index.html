@@ -285,7 +285,7 @@
     <div class="container">
         <div class="chart-container">
             <div class="chart-header">
-                <div class="chart-title">What if Battles!</div>
+                <div class="chart-title">What If Battles!</div>
                 <div class="chart-subtitle">Tell us which battles you think are straight fire… and which ones are just wild ideas.</div>
             </div>
 
@@ -332,7 +332,12 @@
             const matchup = matchupsData.find(m => m.matchup_id === data.matchupId);
             if (matchup) {
                 matchup.vote_count = data.newVoteCount;
-                renderMatchups(); // Re-render to show updated vote count
+                // Only re-render if this user hasn't just voted for this matchup
+                // (to avoid double-counting the vote in the UI)
+                if (!votedMatchups.includes(data.matchupId) || 
+                    !document.querySelector(`button[onclick="voteForMatchup('${data.matchupId}')"]`)?.disabled) {
+                    renderMatchups(); // Re-render to show updated vote count
+                }
                 loadStats(); // Refresh stats
             }
         });
@@ -464,14 +469,13 @@
                 if (data.success) {
                     votedMatchups.push(matchupId);
                     
-                    // Find the matchup in the local data and increment its vote count
-                    const votedMatchup = matchupsData.find(m => m.matchup_id === matchupId);
-                    if (votedMatchup) {
-                        votedMatchup.vote_count = (votedMatchup.vote_count || 0) + 1;
+                    // The UI will be updated by the socket.io event, so we just disable the button
+                    // and wait for the broadcast.
+                    const button = document.querySelector(`button[onclick="voteForMatchup('${matchupId}')"]`);
+                    if (button) {
+                        button.disabled = true;
+                        button.textContent = 'Voted!';
                     }
-
-                    // Re-render with sorting
-                    renderMatchups();
                     loadStats(); // Refresh stats
                     showSuccess('Vote recorded! Thank you for your input.');
                 } else {
