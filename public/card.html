@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Card</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 40px;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            width: 250px;
+            height: 350px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .image-section {
+            flex: 4;
+            background: red;
+            background-size: cover;
+            background-position: center;
+            background-image: url('https://images.unsplash.com/photo-1494790108755-2616c197e47b?w=400&h=300&fit=crop');
+        }
+
+        .name-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+
+        .name {
+            font-size: 16px;
+            font-weight: 500;
+            color: #333;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="image-section"></div>
+        <div class="name-section">
+            <p class="name">Sarah Johnson</p>
+        </div>
+    </div>
+</body>
+</html>
