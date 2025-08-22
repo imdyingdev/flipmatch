@@ -7,6 +7,7 @@
     // Audio for hover effects
     let hoverSound = null;
     let emceeHoverSound = null;
+    let fireSound = null; // For vote/fire button clicks
     let audioInitialized = false;
 
     // Initialize audio
@@ -19,9 +20,13 @@
             emceeHoverSound = new Audio('/audio/hover-char.mp3');
             emceeHoverSound.volume = 0.3; // Set volume to 30%
             emceeHoverSound.preload = 'auto';
+
+            fireSound = new Audio('/audio/fire.mp3');
+            fireSound.volume = 0.5; // Set volume to 50%
+            fireSound.preload = 'auto';
             
             audioInitialized = true;
-            console.log('Hover audio initialized');
+            console.log('Hover and fire audio initialized');
         } catch (error) {
             console.log('Audio initialization failed:', error);
         }
@@ -43,6 +48,21 @@
     }
 
     // Play hover sound for emcee cards
+    function playFireSound() {
+        if (fireSound && audioInitialized) {
+            try {
+                fireSound.currentTime = 0; // Reset to start
+                fireSound.play().catch(e => {
+                    // Ignore autoplay policy errors
+                    console.log('Audio play prevented by browser policy');
+                });
+            } catch (error) {
+                console.log('Error playing fire sound:', error);
+            }
+        }
+    }
+
+    // Play hover sound for emcee cards
     function playEmceeHoverSound() {
         if (emceeHoverSound && audioInitialized) {
             try {
@@ -57,11 +77,12 @@
         }
     }
 
-    // Add hover listeners to existing elements
-    function addHoverListeners() {
+    // Add event listeners to existing elements
+    function addEventListeners() {
         const barContainers = document.querySelectorAll('.bar-container');
         const voteBars = document.querySelectorAll('.vote-bar');
         const emceeCards = document.querySelectorAll('.emcee-card');
+        const voteButtons = document.querySelectorAll('.vote-btn');
         
         // Add listeners to bar containers
         barContainers.forEach(container => {
@@ -77,8 +98,13 @@
         emceeCards.forEach(card => {
             card.addEventListener('mouseenter', playEmceeHoverSound);
         });
+
+        // Add listeners to vote buttons
+        voteButtons.forEach(button => {
+            button.addEventListener('click', playFireSound);
+        });
         
-        console.log(`Added hover sound to ${barContainers.length} bar containers, ${voteBars.length} vote bars, and ${emceeCards.length} emcee cards`);
+        console.log(`Added hover sound to ${barContainers.length} bar containers, ${voteBars.length} vote bars, and ${emceeCards.length} emcee cards. Added fire sound to ${voteButtons.length} vote buttons.`);
     }
 
     // Observer to watch for new bars being added dynamically
@@ -92,6 +118,7 @@
                             const barContainers = node.querySelectorAll ? node.querySelectorAll('.bar-container') : [];
                             const voteBars = node.querySelectorAll ? node.querySelectorAll('.vote-bar') : [];
                             const emceeCards = node.querySelectorAll ? node.querySelectorAll('.emcee-card') : [];
+                            const voteButtons = node.querySelectorAll ? node.querySelectorAll('.vote-btn') : [];
                             
                             // Add listeners to new bar containers
                             barContainers.forEach(container => {
@@ -107,6 +134,11 @@
                             emceeCards.forEach(card => {
                                 card.addEventListener('mouseenter', playEmceeHoverSound);
                             });
+
+                            // Add listeners to new vote buttons
+                            voteButtons.forEach(button => {
+                                button.addEventListener('click', playFireSound);
+                            });
                             
                             // Check if the node itself is one of these elements
                             if (node.classList && node.classList.contains('bar-container')) {
@@ -117,6 +149,9 @@
                             }
                             if (node.classList && node.classList.contains('emcee-card')) {
                                 node.addEventListener('mouseenter', playEmceeHoverSound);
+                            }
+                            if (node.classList && node.classList.contains('vote-btn')) {
+                                node.addEventListener('click', playFireSound);
                             }
                         }
                     });
@@ -134,7 +169,7 @@
     // Initialize everything when DOM is ready
     function initialize() {
         initializeAudio();
-        addHoverListeners();
+        addEventListeners();
         setupMutationObserver();
         
         // Enable audio on first user interaction
@@ -151,6 +186,12 @@
                     emceeHoverSound.currentTime = 0;
                 }).catch(() => {});
             }
+            if (fireSound) {
+                fireSound.play().then(() => {
+                    fireSound.pause();
+                    fireSound.currentTime = 0;
+                }).catch(() => {});
+            }
             document.removeEventListener('click', enableAudio);
         }, { once: true });
     }
@@ -164,7 +205,7 @@
 
     // Also re-initialize when new content is loaded (for dynamic updates)
     window.addEventListener('load', function() {
-        setTimeout(addHoverListeners, 1000); // Add delay to catch dynamically loaded content
+        setTimeout(addEventListeners, 1000); // Add delay to catch dynamically loaded content
     });
 
 })();
