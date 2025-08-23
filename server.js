@@ -19,8 +19,8 @@ const io = new Server(server, {
         methods: ["GET", "POST"]
     }
 });
-// const port = process.env.PORT || 3002;
-const port = 3002;
+const port = process.env.PORT || 3002;
+// const port = 3002;
 
 // Rate limiting middleware
 const voteRateLimit = rateLimit({
