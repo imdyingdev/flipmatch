@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const cookieParser = require('cookie-parser');
@@ -98,10 +99,14 @@ app.get('/api/emcees', async (req, res) => {
     }
 });
 
+// Configurable threshold for recent battles
+const RECENT_BATTLES_THRESHOLD = process.env.RECENT_BATTLES_THRESHOLD || 50;
+
 // API endpoint to get all potential future matchups
 app.get('/api/future-matchups', async (req, res) => {
     try {
         console.log('Future matchups endpoint called');
+        console.log(`Using recent battles threshold: ${RECENT_BATTLES_THRESHOLD}`);
         
         // Check cache first
         const cachedData = getCachedData('future-matchups');
@@ -110,13 +115,36 @@ app.get('/api/future-matchups', async (req, res) => {
             return res.json(cachedData);
         }
         
-        // Optimized query with better indexing strategy
+        // Optimized query with prioritized ordering for recent emcees
+        // Get emcees from first N battles (oldest battles = recent emcees in our context)
         const futureMatchups = await sql`
+            WITH recent_emcees AS (
+                SELECT DISTINCT emcee_id FROM (
+                    SELECT emcee1_id as emcee_id FROM (
+                        SELECT emcee1_id FROM battles ORDER BY id ASC LIMIT ${RECENT_BATTLES_THRESHOLD}
+                    ) recent1
+                    UNION
+                    SELECT emcee2_id as emcee_id FROM (
+                        SELECT emcee2_id FROM battles ORDER BY id ASC LIMIT ${RECENT_BATTLES_THRESHOLD}
+                    ) recent2
+                ) all_recent
+            )
             SELECT
                 e1.name AS candidate1,
                 e2.name AS candidate2,
                 e1.id || '-' || e2.id AS matchup_id,
-                COALESCE(vote_counts.vote_count, 0) as vote_count
+                COALESCE(vote_counts.vote_count, 0) as vote_count,
+                -- Priority scoring: only both new emcees get highest priority
+                CASE 
+                    -- Both emcees in recent battles (highest priority - only new vs new)
+                    WHEN e1_recent.emcee_id IS NOT NULL AND e2_recent.emcee_id IS NOT NULL THEN 3
+                    -- One emcee in recent battles (medium priority - mixed new vs old)  
+                    WHEN e1_recent.emcee_id IS NOT NULL OR e2_recent.emcee_id IS NOT NULL THEN 2
+                    -- Both emcees NOT in recent battles (lowest priority - old vs old)
+                    ELSE 1
+                END as priority_score,
+                -- Add randomization within same priority level
+                RANDOM() as random_order
             FROM emcees e1
             CROSS JOIN emcees e2
             LEFT JOIN (
@@ -127,13 +155,15 @@ app.get('/api/future-matchups', async (req, res) => {
                 FROM future_battle_votes
                 GROUP BY emcee1_id, emcee2_id
             ) vote_counts ON (vote_counts.emcee1_id = e1.id AND vote_counts.emcee2_id = e2.id)
+            LEFT JOIN recent_emcees e1_recent ON e1_recent.emcee_id = e1.id
+            LEFT JOIN recent_emcees e2_recent ON e2_recent.emcee_id = e2.id
             WHERE e1.id < e2.id
             AND NOT EXISTS (
                 SELECT 1
                 FROM battles b
                 WHERE (b.emcee1_id = e1.id AND b.emcee2_id = e2.id) OR (b.emcee1_id = e2.id AND b.emcee2_id = e1.id)
             )
-            ORDER BY vote_count DESC, e1.name, e2.name;
+            ORDER BY priority_score DESC, vote_count DESC, random_order;
         `;
 
         // Convert vote_count to integers

@@ -1,6 +1,6 @@
 const postgres = require('postgres');
 
-const sql = postgres({
+const sql = postgres(process.env.DATABASE_URL || {
     host: process.env.INSTANCE_CONNECTION_NAME ? `/cloudsql/${process.env.INSTANCE_CONNECTION_NAME}` : (process.env.PGHOST || '34.9.200.153'),
     port: process.env.INSTANCE_CONNECTION_NAME ? undefined : (process.env.PGPORT || 5432),
     database: process.env.PGDATABASE || 'postgres',

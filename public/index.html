@@ -317,6 +317,20 @@
             background: #999;
         }
 
+        .ads-section {
+            flex: 1;
+            min-width: 100px;
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #333333;
+            min-height: 200px;
+        }
+
         .emcee-card {
             width: 100px;
             height: 130px;
@@ -560,10 +574,6 @@
                 <div class="chart-subtitle">Tell us which battles you think are straight fire… and which ones are just wild ideas.</div>
             </div>
 
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="Search for a specific battle (e.g., Emcee A vs Emcee B)">
-            </div>
-
             <div class="stats-emcees-container">
                 <div class="stats-bar" id="statsBar">
                     <div class="stat-item">
@@ -588,6 +598,21 @@
                     <div class="section-title">Top Requested Emcees</div>
                     <div class="emcees-grid" id="emceesGrid"></div>
                 </div>
+
+                <div class="ads-section">
+                    <div class="section-title">Help me Boost!</div>
+                    <dotlottie-wc src="https://lottie.host/7e98cd4a-555d-406a-8b6a-37e0a96ba5a2/owNnWukTaf.lottie" 
+                                  style="width: 150px; height: 150px; cursor: pointer;" 
+                                  speed="1" 
+                                  autoplay 
+                                  loop
+                                  onclick="window.open('https://otieu.com/4/8686653', '_blank')">
+                    </dotlottie-wc>
+                </div>
+            </div>
+
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search for a specific battle (e.g., Emcee A vs Emcee B)">
             </div>
 
             <div id="errorMessage" class="error" style="display: none;"></div>
@@ -598,6 +623,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="js/app.min.js"></script>
     <script src="js/hover-audio.js"></script>

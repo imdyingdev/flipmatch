@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Battle Order Debug</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: white;
+            color: black;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .sections {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            flex: 1;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+        
+        .section h2 {
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .battle {
+            padding: 10px;
+            margin-bottom: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .battle-id {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .battle-emcees {
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Battle Order Debug</h1>
+        
+        <div class="sections">
+            <div class="section">
+                <h2>Latest 5 Battles (Current)</h2>
+                <div id="latest-battles">Loading...</div>
+            </div>
+            
+            <div class="section">
+                <h2>First 5 Battles (Oldest)</h2>
+                <div id="first-battles">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// Fetch actual battle data from database
+async function loadBattles() {
+    try {
+        const response = await fetch('/api/debug-battles');
+        if (!response.ok) {
+            throw new Error(`API failed: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        displayBattles('latest-battles', data.latest);
+        displayBattles('first-battles', data.first);
+        
+    } catch (error) {
+        console.error('Error loading battles:', error);
+        
+        // Show fallback message
+        document.getElementById('latest-battles').innerHTML = '<p style="color: red;">Failed to load data. Make sure debug server is running on port 3003</p>';
+        document.getElementById('first-battles').innerHTML = '<p style="color: red;">Run: node debug-server.js</p>';
+    }
+}
+
+function displayBattles(containerId, battles) {
+    const container = document.getElementById(containerId);
+    
+    if (!battles || battles.length === 0) {
+        container.innerHTML = '<p>No battles found</p>';
+        return;
+    }
+    
+    container.innerHTML = battles.map(battle => `
+        <div class="battle">
+            <div class="battle-id">Battle ${battle.id}</div>
+            <div class="battle-emcees">${battle.emcee1} vs ${battle.emcee2}</div>
+        </div>
+    `).join('');
+}
+
+// Load data when page loads
+document.addEventListener('DOMContentLoaded', loadBattles);
+    </script>
+</body>
+</html>
